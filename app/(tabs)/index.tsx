@@ -1,70 +1,105 @@
-import { Image, StyleSheet, Platform } from 'react-native';
+import React, { useState } from 'react';
+import { SafeAreaView, StatusBar, TextInput, Text, Pressable, View, FlatList, Alert } from 'react-native';
+import ReactNativeModal from 'react-native-modal';
+import {Box} from "./styles"
 
-import { HelloWave } from '@/components/HelloWave';
-import ParallaxScrollView from '@/components/ParallaxScrollView';
-import { ThemedText } from '@/components/ThemedText';
-import { ThemedView } from '@/components/ThemedView';
+const items = [
+  {
+    id: 1,
+    name: 'Document 1',
+    type: 'pdf',
+    size: '2.5 MB',
+    dateModified: '2024-05-13',
+    path: 'path/to/document1.pdf'
+  },
+  {
+    id: 2,
+    name: 'Image 1',
+    type: 'jpg',
+    size: '1.1 MB',
+    dateModified: '2024-05-12',
+    path: 'path/to/image1.jpg'
+  },
+  {
+    id: 3,
+    name: 'Presentation',
+    type: 'pptx',
+    size: '5.3 MB',
+    dateModified: '2024-05-11',
+    path: 'path/to/presentation.pptx'
+  },
+];
 
 export default function HomeScreen() {
+  const [input, setInput] = useState('');
+  const [isOpen, setOpen] = useState(false);
+  const [itemsList, setItemsList] = useState(items);
+  const [selected, setSelected] = useState()
+
+  const handleDeleteItem = (ItemName:any,itemId:any) => {
+    Alert.alert(
+      'Confirm Delete',
+      `Are you sure you want to delete this "${ItemName}"? `,
+      [
+        {
+          text: 'Cancel',
+          style: "cancel"
+        },
+        {
+          text: 'Delete',
+          onPress: () => {
+            const updatedList = itemsList.filter(item => item.id !== itemId);
+            setItemsList(updatedList);
+          },
+          style: "destructive"
+        },
+      ],
+      { cancelable: true }
+    );
+  };
+
+  const handleAddItem = () => {
+    // Add your logic to add items here
+    // For example:
+    const newItem = { id: itemsList.length + 1, name: input};
+    setItemsList([...itemsList, newItem]);
+  };
+
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({ ios: 'cmd + d', android: 'cmd + m' })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-        <ThemedText>
-          Tap the Explore tab to learn more about what's included in this starter app.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          When you're ready, run{' '}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
+    <SafeAreaView style={{ marginTop: StatusBar.currentHeight }}>
+      <Text>Add Item:</Text>
+      <TextInput value={input} onChangeText={setInput} style={{ backgroundColor: 'red' }} />
+      <Pressable onPress={handleAddItem} style={{ backgroundColor: 'grey' }}>
+        <Text>Add</Text>
+      </Pressable>
+      <FlatList
+        data={itemsList}
+        renderItem={({ item }) => (
+          <View>
+            
+          <Pressable onPress={() => {setSelected(item.name);setOpen(!isOpen)}}>
+            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+              <Box style={{color: "white"}}>{item.name}</Box>
+              <Pressable onPress={() => handleDeleteItem(item.name,item.id)}>
+                <Text style={{ marginLeft: 10, color: 'red' }}>Delete</Text>
+              </Pressable>
+            </View>
+          </Pressable>
+                <View>
+        <ReactNativeModal isVisible={isOpen} >
+          <View style={{ flex: 1, marginTop: '50%' }}>
+            <Pressable onPress={() => setOpen(!isOpen)}>
+              <Text style={{ color: 'white', textAlign: 'center' }}>X</Text>
+            </Pressable>
+            <Text style={{ color: 'white' }}>{selected}</Text>
+          </View>
+        </ReactNativeModal>
+      </View>
+          </View>
+        )}
+        keyExtractor={item => item.id.toString()}
+      />
+
+    </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  titleContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  stepContainer: {
-    gap: 8,
-    marginBottom: 8,
-  },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
-  },
-});
